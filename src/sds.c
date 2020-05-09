@@ -48,6 +48,8 @@
  * You can print the string with printf() as there is an implicit \0 at the
  * end of the string. However the string is binary safe and can contain
  * \0 characters in the middle, as the length is stored in the sds header. */
+// 创建一个新的sds
+// 复杂度 T = O(N)
 sds sdsnewlen(const void *init, size_t initlen) {
     struct sdshdr *sh;
 
@@ -62,7 +64,7 @@ sds sdsnewlen(const void *init, size_t initlen) {
     if (initlen && init)
         memcpy(sh->buf, init, initlen);
     sh->buf[initlen] = '\0';
-    return (char*)sh->buf;
+    return (char*)sh->buf; // 注意：返回值buf的地址
 }
 
 /* Create an empty (zero length) sds string. Even in this case the string
@@ -72,6 +74,7 @@ sds sdsempty(void) {
 }
 
 /* Create a new sds string starting from a null terminated C string. */
+// 根据给定字符串init* 创建一个包含同样字符串的sds
 sds sdsnew(const char *init) {
     size_t initlen = (init == NULL) ? 0 : strlen(init);
     return sdsnewlen(init, initlen);
@@ -126,19 +129,21 @@ void sdsclear(sds s) {
  *
  * Note: this does not change the *length* of the sds string as returned
  * by sdslen(), but only the free buffer space we have. */
+// 对sds中buf进行扩展，确保函数执行之后，buf至少会有addlen+1长度的空余
+// 额外1个字节存储 \0
 sds sdsMakeRoomFor(sds s, size_t addlen) {
     struct sdshdr *sh, *newsh;
     size_t free = sdsavail(s);
     size_t len, newlen;
 
-    if (free >= addlen) return s;
+    if (free >= addlen) return s; // 当剩余空间满足时，那么不需要分配空间
     len = sdslen(s);
     sh = (void*) (s-(sizeof(struct sdshdr)));
     newlen = (len+addlen);
-    if (newlen < SDS_MAX_PREALLOC)
+    if (newlen < SDS_MAX_PREALLOC) // 小于1M时，那么分配2倍
         newlen *= 2;
     else
-        newlen += SDS_MAX_PREALLOC;
+        newlen += SDS_MAX_PREALLOC; // 大于或者等于1M时，分配1M
     newsh = zrealloc(sh, sizeof(struct sdshdr)+newlen+1);
     if (newsh == NULL) return NULL;
 

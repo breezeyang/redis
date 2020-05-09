@@ -39,13 +39,13 @@
 typedef char *sds;
 
 struct sdshdr {
-    unsigned int len;
-    unsigned int free;
-    char buf[];
+    unsigned int len;     // sds中被使用的长度
+    unsigned int free;    // sds中未被使用的长度
+    char buf[];           // sds中字符数组，用户保存字符串（该数组是柔性数组，即数组长度是0）
 };
 
 static inline size_t sdslen(const sds s) {
-    struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
+    struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr))); // 先调整指针，然后在取值
     return sh->len;
 }
 
